@@ -1,0 +1,12 @@
+{
+  "framework": null,
+  "buildCommand": "echo Build OK",
+  "installCommand": "npm ci",
+  "outputDirectory": "public",
+  "functions": {
+    "api/devis.js": {
+      "maxDuration": 60,
+      "includeFiles": "lib/**"
+    }
+  }
+}
