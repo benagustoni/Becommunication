@@ -221,7 +221,34 @@
    notice(received+receipt,false);
    form.reset();
   } catch(error) {
-   notice('L’envoi n’a pas pu être confirmé. Merci de réessayer ou de nous appeler au +41 79 967 02 95.',true);
+   notice('L’envoi automatique est momentanément indisponible. Votre demande n’a pas été envoyée. Vous pouvez la transmettre par WhatsApp sans ressaisir les informations :',true);
+   const details=[
+    'Bonjour PF Nettoyage, je vous contacte depuis www.pfnettoyage.ch pour une demande de devis.',
+    'Nom : '+payload.name,
+    'Téléphone : '+payload.telephone,
+    'E-mail : '+(payload.email||'Non indiqué'),
+    'Prestation : '+payload.service,
+    'Pièces : '+(payload.pieces||'Non indiqué'),
+    'Date souhaitée : '+(payload.desiredDate||'À convenir'),
+    payload.location?'Lieu : '+[payload.location.commune,payload.location.region].filter(Boolean).join(', '):'Départ : '+[payload.from.address,payload.from.commune,payload.from.region].filter(Boolean).join(', '),
+    payload.to?'Arrivée : '+[payload.to.address,payload.to.commune,payload.to.region].filter(Boolean).join(', '):'',
+    'Description : '+payload.description
+   ].filter(Boolean).join('\\n');
+   const link=document.createElement('a');
+   link.href='https://wa.me/41799670295?text='+encodeURIComponent(details);
+   link.target='_blank';
+   link.rel='noopener noreferrer';
+   link.className='btn';
+   link.style.marginTop='12px';
+   link.style.display='inline-flex';
+   link.textContent='Transmettre ma demande par WhatsApp';
+   status.appendChild(document.createElement('br'));
+   status.appendChild(link);
+   const reminder=document.createElement('small');
+   reminder.style.display='block';
+   reminder.style.marginTop='8px';
+   reminder.textContent='WhatsApp s’ouvrira avec votre demande préremplie. Vérifiez puis appuyez sur Envoyer : aucun message n’est transmis automatiquement.';
+   status.appendChild(reminder);
   } finally {processing=false;button.disabled=false;}
 
  };
