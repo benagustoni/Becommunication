@@ -173,6 +173,64 @@ async function sendWithDeadline(transport, message) {
   }
 }
 
+
+async function resendMail(message, reference, stage) {
+  const key = process.env.RESEND_API_KEY;
+  if (!key || !key.startsWith('re_')) {
+    const error = new Error('resend_not_configured');
+    error.code = 'RESEND_UNAVAILABLE';
+    throw error;
+  }
+  const recipient = mailbox(message.to);
+  const attachmentData = (message.attachments || []).map(file => ({
+    filename: file.filename,
+    content: file.content.toString('base64'),
+  }));
+  const payload = {
+    from: message.from,
+    to: [recipient],
+    subject: message.subject,
+    text: message.text,
+    attachments: attachmentData,
+  };
+  if (message.replyTo) payload.reply_to = [mailbox(message.replyTo)];
+  if (message.cc) payload.cc = [mailbox(message.cc)];
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: 'Bearer ' + key,
+      'Content-Type': 'application/json',
+      'Idempotency-Key': reference + '-' + stage,
+    },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(12000),
+  });
+  if (!response.ok) {
+    // Never log API keys, response bodies or customer data.
+    console.error('resend_send_failed', { reference, stage, httpStatus: response.status });
+    const error = new Error('resend_rejected');
+    error.code = 'RESEND_REJECTED';
+    throw error;
+  }
+  const result = await response.json();
+  if (!result || !result.id) throw Object.assign(new Error('resend_missing_id'), { code: 'RESEND_REJECTED' });
+  console.log('resend_accepted', { reference, stage, pdfAttached: attachmentData.length > 0 });
+  return { accepted: [recipient], provider: 'resend' };
+}
+
+async function sendWithFallback(transport, message, reference, stage, forceResend) {
+  if (forceResend) return resendMail(message, reference, stage);
+  try {
+    return await sendWithDeadline(transport, message);
+  } catch (error) {
+    // Only retry known SMTP authentication/configuration refusals.
+    // Do not retry timeouts or uncertain deliveries to avoid duplicates.
+    if (error.code !== 'EAUTH' && error.code !== 'SMTP_CONFIG') throw error;
+    console.warn('smtp_auth_fallback', { reference, stage, code: error.code, responseCode: error.responseCode });
+    return resendMail(message, reference, stage);
+  }
+}
+
 module.exports = async function devis(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   if (req.method !== 'POST') {
@@ -226,18 +284,18 @@ module.exports = async function devis(req, res) {
       const error = new Error('pdf_generation_failed'); error.code = 'EPDF'; throw error;
     }
     transport = createMailer(config.transport);
-    const result = await sendWithDeadline(transport, {
+    const result = await sendWithFallback(transport, {
       from: config.from, to: config.to, cc: config.cc,
       replyTo: p.email || undefined,
       subject: 'Demande de devis - ' + p.service,
       text, attachments: [attachment],
-    });
+    }, reference, 'quote', false);
     assertAccepted(result, config.to);
     console.log('quote_sent', { reference, accepted: true, pdfAttached: true });
     let confirmation = 'skipped';
     if (p.email) {
       try {
-        const receipt = await sendWithDeadline(transport, {
+        const receipt = await sendWithFallback(transport, {
           from: config.from, to: p.email, replyTo: mailbox(config.to),
           subject: 'Votre demande de devis - PF Nettoyage',
           text: ['Bonjour ' + p.name + ',', '',
@@ -247,7 +305,7 @@ module.exports = async function devis(req, res) {
             '', 'PF Nettoyage - Facility Services', '+41 79 967 02 95', 'https://www.pfnettoyage.ch',
           ].join('\n'),
           attachments: [attachment],
-        });
+        }, reference, 'receipt', result.provider === 'resend');
         assertAccepted(receipt, p.email);
         confirmation = 'sent';
         console.log('quote_confirmation_sent', { reference, accepted: true, pdfAttached: true });
