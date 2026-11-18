@@ -3,7 +3,6 @@
 const nodemailer = require('nodemailer');
 const net = require('node:net');
 const { randomUUID } = require('node:crypto');
-const { createQuoteAttachment } = require('../lib/quote-document.cjs');
 
 // Best-effort instance-local protection; this is not a shared rate-limit store.
 const recent = new Map();
@@ -294,42 +293,16 @@ module.exports = async function devis(req, res) {
   ].join('\n');
   let transport;
   try {
-    const attachment = await createQuoteAttachment(p);
-    if (!attachment || !Buffer.isBuffer(attachment.content) || !attachment.content.length) {
-      const error = new Error('pdf_generation_failed'); error.code = 'EPDF'; throw error;
-    }
     transport = createMailer(config.transport);
     const result = await sendWithFallback(transport, {
       from: config.from, to: config.to, cc: config.cc,
       replyTo: p.email || undefined,
       subject: 'Demande de devis - ' + p.service,
-      text, attachments: [attachment],
+      text,
     }, reference, 'quote', false);
     assertAccepted(result, config.to);
-    console.log('quote_sent', { reference, accepted: true, pdfAttached: true });
-    let confirmation = 'skipped';
-    if (p.email) {
-      try {
-        const receipt = await sendWithFallback(transport, {
-          from: config.from, to: p.email, replyTo: mailbox(config.to),
-          subject: 'Votre demande de devis - PF Nettoyage',
-          text: ['Bonjour ' + p.name + ',', '',
-            'Nous avons bien reçu votre demande de devis. Nous vous contacterons prochainement.',
-            'Vous trouverez le récapitulatif de votre demande en pièce jointe.',
-            'Aucun rendez-vous ni tarif n’est confirmé automatiquement.', '', text,
-            '', 'PF Nettoyage - Facility Services', '+41 79 967 02 95', 'https://www.pfnettoyage.ch',
-          ].join('\n'),
-          attachments: [attachment],
-        }, reference, 'receipt', result.provider === 'resend');
-        assertAccepted(receipt, p.email);
-        confirmation = 'sent';
-        console.log('quote_confirmation_sent', { reference, accepted: true, pdfAttached: true });
-      } catch (error) {
-        confirmation = 'failed';
-        console.error('quote_confirmation_failed', { reference, ...safeError(error) });
-      }
-    }
-    return res.status(200).json({ ok: true, confirmation, reference });
+    console.log('quote_sent', { reference, accepted: true, pdfAttached: false });
+    return res.status(200).json({ ok: true, reference });
   } catch (error) {
     console.error('quote_send_failed', { reference, ...safeError(error) });
     return res.status(502).json({ ok: false, error: 'sending_failed' });
