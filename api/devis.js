@@ -173,38 +173,6 @@ async function sendWithDeadline(transport, message) {
 }
 
 
-// Previously used PF Nettoyage form; this fallback does not require Gmail or Resend credentials.
-const FORMSPREE_ENDPOINT = 'https://formspree.io/f/myeeryky';
-
-async function submitViaFormspree(p, reference) {
-  const payload = {
-    name: p.name,
-    telephone: p.telephone,
-    email: p.email || '',
-    service: p.service,
-    pieces: p.pieces || '',
-    date_souhaitee: p.desiredDate || '',
-    message: p.description,
-    lieu: p.location ? pointText(p.location) : '',
-    depart: p.from ? pointText(p.from) : '',
-    destination: p.to ? pointText(p.to) : '',
-    reference,
-    _subject: 'PF Nettoyage - Demande de devis : ' + p.service
-  };
-  const response = await fetch(FORMSPREE_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-    signal: AbortSignal.timeout(12000)
-  });
-  if (!response.ok) {
-    console.error('formspree_rejected', { reference, httpStatus: response.status });
-    throw Object.assign(new Error('formspree_delivery_failed'), { code: 'FORMSPREE_FAILED' });
-  }
-  console.log('formspree_accepted', { reference, httpStatus: response.status });
-  return { accepted: true, provider: 'formspree' };
-}
-
 module.exports = async function devis(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   if (req.method !== 'POST') {
@@ -254,24 +222,15 @@ module.exports = async function devis(req, res) {
   let transport;
   try {
     transport = createMailer(config.transport);
-    let provider = 'smtp';
-    try {
-      const result = await sendWithDeadline(transport, {
-        from: config.from, to: config.to, cc: config.cc,
-        replyTo: p.email || undefined,
-        subject: 'Demande de devis - ' + p.service,
-        text,
-      });
-      assertAccepted(result, config.to);
-    } catch (smtpError) {
-      // Only fall back on an explicit authentication rejection, not an uncertain send.
-      if (smtpError.code !== 'EAUTH' || smtpError.responseCode !== 535) throw smtpError;
-      console.warn('smtp_auth_fallback_formspree', { reference, code: smtpError.code, responseCode: 535 });
-      await submitViaFormspree(p, reference);
-      provider = 'formspree';
-    }
-    console.log('quote_sent', { reference, accepted: true, provider, pdfAttached: false });
-    return res.status(200).json({ ok: true, reference, provider });
+    const result = await sendWithDeadline(transport, {
+      from: config.from, to: config.to, cc: config.cc,
+      replyTo: p.email || undefined,
+      subject: 'Demande de devis - ' + p.service,
+      text,
+    });
+    assertAccepted(result, config.to);
+    console.log('quote_sent', { reference, accepted: true, provider: 'smtp', pdfAttached: false });
+    return res.status(200).json({ ok: true, reference });
   } catch (error) {
     console.error('quote_send_failed', { reference, ...safeError(error) });
     return res.status(502).json({ ok: false, error: 'sending_failed' });
