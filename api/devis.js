@@ -175,8 +175,13 @@ async function sendWithDeadline(transport, message) {
 
 
 async function resendMail(message, reference, stage) {
-  const key = process.env.RESEND_API_KEY;
-  if (!key || !key.startsWith('re_')) {
+  const rawKey = process.env.RESEND_API_KEY || '';
+  let key = rawKey.trim();
+  // Remove only a pair of wrapping quotes accidentally copied into Vercel.
+  if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
+    key = key.slice(1, -1).trim();
+  }
+  if (!key || !key.startsWith('re_') || /\s/.test(key)) {
     const error = new Error('resend_not_configured');
     error.code = 'RESEND_UNAVAILABLE';
     throw error;
@@ -206,8 +211,18 @@ async function resendMail(message, reference, stage) {
     signal: AbortSignal.timeout(12000),
   });
   if (!response.ok) {
-    // Never log API keys, response bodies or customer data.
-    console.error('resend_send_failed', { reference, stage, httpStatus: response.status });
+    // Only read and log a vetted error identifier, never response text or secrets.
+    let providerCode = 'unknown';
+    try {
+      const info = await response.json();
+      const candidate = typeof info?.name === 'string' ? info.name : typeof info?.code === 'string' ? info.code : '';
+      if (/^[a-zA-Z][a-zA-Z0-9_]{0,63}$/.test(candidate)) providerCode = candidate;
+    } catch {}
+    console.error('resend_send_failed', {
+      reference, stage, httpStatus: response.status, providerCode,
+      keyFormat: key.startsWith('re_') && !/\s/.test(key) ? 'valid_prefix' : 'invalid_format',
+      normalized: key !== rawKey
+    });
     const error = new Error('resend_rejected');
     error.code = 'RESEND_REJECTED';
     throw error;
