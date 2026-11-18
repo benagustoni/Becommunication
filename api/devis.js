@@ -1,7 +1,5 @@
 'use strict';
 
-const nodemailer = require('nodemailer');
-const net = require('node:net');
 const { randomUUID } = require('node:crypto');
 
 // Best-effort instance-local protection; this is not a shared rate-limit store.
@@ -68,110 +66,91 @@ function mailbox(value) {
   return EMAIL.test(address) ? address : '';
 }
 
-function smtpConfig() {
-  const host = (process.env.SMTP_HOST || '').trim().toLowerCase();
-  const port = Number(process.env.SMTP_PORT);
-  const user = (process.env.SMTP_USER || '').trim();
-  let pass = process.env.SMTP_PASSWORD || '';
-  // Google displays application passwords in four groups; normalize only that format.
-  if (host === 'smtp.gmail.com' && /^(?:[a-z]{16}|[a-z]{4}( [a-z]{4}){3})$/i.test(pass.trim())) {
-    pass = pass.trim().replace(/ /g, '');
-  }
+function gmailConfig() {
+  const clientId = (process.env.GMAIL_CLIENT_ID || '').trim();
+  const clientSecret = (process.env.GMAIL_CLIENT_SECRET || '').trim();
+  const refreshToken = (process.env.GMAIL_REFRESH_TOKEN || '').trim();
   const from = process.env.QUOTE_FROM_EMAIL || 'PF Nettoyage <devis@pfnettoyage.ch>';
   const to = process.env.QUOTE_TO_EMAIL || 'pfnettoyage@gmail.com';
   const cc = (process.env.QUOTE_CC_EMAIL || '').trim();
-  if (!host || /[^a-z0-9.-]/.test(host) || ![465, 587].includes(port) || !EMAIL.test(user) || !pass.trim() ||
-      !mailbox(from) || !mailbox(to) || (cc && !mailbox(cc))) {
-    const error = new Error('smtp_configuration_missing_or_invalid');
-    error.code = 'SMTP_CONFIG';
-    throw error;
+  if (!clientId || !clientSecret || !refreshToken || !mailbox(from) || !mailbox(to) || (cc && !mailbox(cc))) {
+    throw Object.assign(new Error('gmail_oauth_configuration_missing'), { code: 'GMAIL_CONFIG' });
   }
-  return {
-    transport: {
-      host, port, secure: port === 465, requireTLS: port === 587,
-      auth: { user, pass },
-      connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 20000,
-      logger: false, debug: false,
-    },
-    from, to, cc: cc || undefined,
-  };
+  return { clientId, clientSecret, refreshToken, from, to, cc: cc || undefined };
 }
 
 function safeError(error) {
-  const knownCodes = new Set(['SMTP_CONFIG', 'EAUTH', 'ECONNECTION', 'ESOCKET', 'ETIMEDOUT', 'EENVELOPE', 'EMESSAGE', 'EPDF', 'ERECIPIENT']);
+  const code = error && error.code;
   return {
-    code: knownCodes.has(error && error.code) ? error.code : 'SEND_FAILED',
-    responseCode: Number.isInteger(error && error.responseCode) ? error.responseCode : undefined,
-    command: /^(AUTH(?: LOGIN| PLAIN| XOAUTH2)?|CONN|EHLO|HELO|STARTTLS|MAIL FROM|RCPT TO|DATA)$/.test(error && error.command || '') ? error.command : undefined,
-    category: error && error.responseCode === 535 ? 'smtp_authentication_rejected' :
-      error && error.code === 'SMTP_CONFIG' ? 'smtp_configuration' : 'smtp_delivery',
+    code: ['GMAIL_CONFIG', 'GMAIL_OAUTH', 'GMAIL_API', 'ETIMEDOUT'].includes(code) ? code : 'SEND_FAILED',
+    category: code === 'GMAIL_CONFIG' ? 'gmail_configuration' :
+      code === 'GMAIL_OAUTH' ? 'gmail_authorization' : 'gmail_delivery',
   };
 }
 
-function assertAccepted(info, recipient) {
-  const target = mailbox(recipient).toLowerCase();
-  if (!info || !Array.isArray(info.accepted) || !info.accepted.some(address => mailbox(String(address)).toLowerCase() === target)) {
-    const error = new Error('recipient_not_accepted');
-    error.code = 'ERECIPIENT';
-    throw error;
+function b64url(buffer) {
+  return buffer.toString('base64').replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/g, '');
+}
+
+function encodeSubject(value) {
+  return '=?UTF-8?B?' + Buffer.from(value, 'utf8').toString('base64') + '?=';
+}
+
+async function sendViaGmail(config, message) {
+  const signal = AbortSignal.timeout(SEND_DEADLINE_MS);
+  let authResponse;
+  try {
+    authResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: config.clientId, client_secret: config.clientSecret,
+        refresh_token: config.refreshToken, grant_type: 'refresh_token',
+      }),
+      signal,
+    });
+  } catch (error) {
+    throw Object.assign(new Error('gmail_oauth_unreachable'), { code: error.name === 'TimeoutError' ? 'ETIMEDOUT' : 'GMAIL_OAUTH' });
   }
+  if (!authResponse.ok) throw Object.assign(new Error('gmail_oauth_rejected'), { code: 'GMAIL_OAUTH' });
+  const token = await authResponse.json();
+  if (typeof token.access_token !== 'string' || !token.access_token) {
+    throw Object.assign(new Error('gmail_access_token_missing'), { code: 'GMAIL_OAUTH' });
+  }
+
+  // MIME headers are validated; body is encoded to prevent header injection.
+  const headers = [
+    'From: ' + config.from,
+    'To: ' + config.to,
+    ...(config.cc ? ['Cc: ' + config.cc] : []),
+    ...(message.replyTo ? ['Reply-To: ' + message.replyTo] : []),
+    'Subject: ' + encodeSubject(message.subject),
+    'MIME-Version: 1.0',
+    'Content-Type: text/plain; charset=UTF-8',
+    'Content-Transfer-Encoding: base64',
+  ];
+  const mime = headers.join('\\r\\n') + '\\r\\n\\r\\n' +
+    Buffer.from(message.text, 'utf8').toString('base64').replace(/.{1,76}/g, '$&\\r\\n');
+  let response;
+  try {
+    response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token.access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ raw: b64url(Buffer.from(mime, 'utf8')) }),
+      signal,
+    });
+  } catch (error) {
+    throw Object.assign(new Error('gmail_api_unreachable'), { code: error.name === 'TimeoutError' ? 'ETIMEDOUT' : 'GMAIL_API' });
+  }
+  if (!response.ok) throw Object.assign(new Error('gmail_api_rejected'), { code: 'GMAIL_API' });
+  const result = await response.json();
+  if (typeof result.id !== 'string' || !result.id) throw Object.assign(new Error('gmail_message_id_missing'), { code: 'GMAIL_API' });
+  return result.id;
 }
 
 function pointText(point) {
   return point ? [point.address, point.commune, point.region].filter(Boolean).join(', ') : '';
 }
-
-function createMailer(options) {
-  let activeSocket;
-  let closed = false;
-  const transport = nodemailer.createTransport({
-    ...options,
-    // Keep access to the underlying socket so a global deadline can cancel it.
-    // Nodemailer upgrades this connected plain socket to TLS on 465/587.
-    getSocket(socketOptions, callback) {
-      if (closed) return callback(Object.assign(new Error('send_cancelled'), { code: 'ETIMEDOUT' }));
-      const socket = net.connect({ host: socketOptions.host, port: socketOptions.port });
-      activeSocket = socket;
-      let returned = false;
-      socket.once('error', error => {
-        if (returned) return;
-        returned = true;
-        callback(error);
-      });
-      socket.once('connect', () => {
-        if (returned || closed) return;
-        returned = true;
-        callback(null, { connection: socket });
-      });
-    },
-  });
-  return {
-    sendMail: message => transport.sendMail(message),
-    close() {
-      if (closed) return;
-      closed = true;
-      if (activeSocket) activeSocket.destroy();
-      if (typeof transport.close === 'function') transport.close();
-    },
-  };
-}
-
-async function sendWithDeadline(transport, message) {
-  let timer;
-  const deadline = new Promise((resolve, reject) => {
-    timer = setTimeout(() => {
-      const error = Object.assign(new Error('smtp_deadline_exceeded'), { code: 'ETIMEDOUT' });
-      reject(error);
-      transport.close();
-    }, SEND_DEADLINE_MS);
-  });
-  try {
-    return await Promise.race([transport.sendMail(message), deadline]);
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
 
 module.exports = async function devis(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -195,7 +174,7 @@ module.exports = async function devis(req, res) {
 
   let config;
   try {
-    config = smtpConfig();
+    config = gmailConfig();
   } catch (error) {
     console.error('quote_send_failed', safeError(error));
     return res.status(503).json({ ok: false, error: 'sending_unavailable' });
@@ -219,22 +198,16 @@ module.exports = async function devis(req, res) {
     ...(p.location ? ['Lieu : ' + pointText(p.location)] : ['Départ : ' + pointText(p.from), 'Arrivée : ' + pointText(p.to)]),
     '', p.description, '', 'Demande sans engagement. Aucun rendez-vous confirmé automatiquement.',
   ].join('\n');
-  let transport;
   try {
-    transport = createMailer(config.transport);
-    const result = await sendWithDeadline(transport, {
-      from: config.from, to: config.to, cc: config.cc,
+    await sendViaGmail(config, {
       replyTo: p.email || undefined,
       subject: 'Demande de devis - ' + p.service,
       text,
     });
-    assertAccepted(result, config.to);
-    console.log('quote_sent', { reference, accepted: true, provider: 'smtp', pdfAttached: false });
+    console.log('quote_sent', { reference, accepted: true, provider: 'gmail_api', pdfAttached: false });
     return res.status(200).json({ ok: true, reference });
   } catch (error) {
     console.error('quote_send_failed', { reference, ...safeError(error) });
     return res.status(502).json({ ok: false, error: 'sending_failed' });
-  } finally {
-    if (transport && typeof transport.close === 'function') transport.close();
   }
 };
