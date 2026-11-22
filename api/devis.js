@@ -247,7 +247,48 @@ module.exports = async function devis(req, res) {
     });
     assertAccepted(result, config.to);
     console.log('quote_sent', { reference, accepted: true, provider: 'smtp', pdfAttached: false });
-    return res.status(200).json({ ok: true, reference });
+
+    // Auto-acknowledgement only after the business mailbox has accepted the request.
+    // It is optional: never claim a customer confirmation was sent if it failed.
+    let confirmationSent = false;
+    if (p.email) {
+      try {
+        // Use a separate connection: avoid impacting the accepted original message.
+        const replyTransport = createMailer(config.transport);
+        try {
+          const customerReply = await sendWithDeadline(replyTransport, {
+            from: config.from,
+            to: p.email,
+            replyTo: mailbox(config.from),
+            subject: 'Confirmation de votre demande de devis – PF Nettoyage',
+            text: [
+              'Bonjour ' + p.name + ',',
+              '',
+              'Nous avons bien reçu votre demande de devis auprès de PF Nettoyage – Facility Services.',
+              'Référence : ' + reference,
+              '',
+              'Notre équipe examinera votre demande et vous contactera prochainement.',
+              'Votre demande est gratuite et sans engagement.',
+              'La date d’intervention reste à confirmer.',
+              '',
+              'Cordialement,',
+              'PF Nettoyage – Facility Services',
+              'Téléphone : +41 79 967 02 95',
+              'E-mail : devis@pfnettoyage.ch',
+              'Site : https://www.pfnettoyage.ch',
+            ].join('\n'),
+          });
+          assertAccepted(customerReply, p.email);
+          confirmationSent = true;
+          console.log('quote_customer_confirmation_sent', { reference, accepted: true });
+        } finally {
+          replyTransport.close();
+        }
+      } catch (confirmationError) {
+        console.error('quote_customer_confirmation_failed', { reference, ...safeError(confirmationError) });
+      }
+    }
+    return res.status(200).json({ ok: true, reference, confirmationSent });
   } catch (error) {
     console.error('quote_send_failed', { reference, ...safeError(error) });
     return res.status(502).json({ ok: false, error: 'sending_failed' });
