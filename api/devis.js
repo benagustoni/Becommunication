@@ -175,6 +175,23 @@ async function sendWithDeadline(transport, message) {
 
 module.exports = async function devis(req, res) {
   res.setHeader('Cache-Control', 'no-store');
+  // Explicit CORS for PF Nettoyage's official mobile app only.
+  const origin = String(req.headers && req.headers.origin || '');
+  const allowedOrigins = new Set([
+    'https://app.pfnettoyage.ch',
+    'https://application.pfnettoyage.ch',
+    'https://www.pfnettoyage.ch',
+  ]);
+  if (allowedOrigins.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Max-Age', '600');
+  }
+  if (req.method === 'OPTIONS') {
+    return res.status(allowedOrigins.has(origin) ? 204 : 403).end();
+  }
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
