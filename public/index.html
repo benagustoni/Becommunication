@@ -95,8 +95,49 @@
 @media(max-width:860px){.proof-inner{gap:0;padding:20px 0}.proof-item{padding:18px 10px}}
 @media(max-width:600px){.proof-inner{padding:18px 0}.proof-item{gap:16px;padding:19px 6px}.proof-item strong{font-size:21px}.proof-item small{font-size:15px}.proof .bubble{height:50px;width:50px;min-width:50px}}
 </style>
-<style id="pf-proof-service-images-20261112">.proof{background:#f3f8f7}.proof-inner{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;padding:36px 0}.proof-item{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;overflow:hidden;border:1px solid #dce9e8;border-radius:19px;background:white;box-shadow:0 9px 24px rgba(7,31,41,.1);padding:0;gap:0;min-width:0;text-align:center}.proof-item:last-child{border-right:1px solid #dce9e8}.proof-photo{width:100%;height:205px;object-fit:cover;display:block}.proof-text{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:15px 15px 25px}.proof .bubble{width:46px;height:46px;min-width:46px;margin-bottom:12px}.proof-item strong{font-size:clamp(19px,1.65vw,24px);line-height:1.3}.proof-item small{font-size:15px;line-height:1.45;margin-top:10px;color:#35565e}@media(max-width:860px){.proof-inner{gap:12px}.proof-photo{height:160px}.proof-text{padding:13px 11px 20px}.proof-item strong{font-size:19px}}@media(max-width:600px){.proof-inner{display:grid;grid-template-columns:1fr;gap:18px;padding:25px 0}.proof-item{padding:0;border:1px solid #dce9e8;border-radius:18px}.proof-item:last-child{border-bottom:1px solid #dce9e8}.proof-photo{height:200px}.proof-text{padding:16px 14px 24px}.proof-item strong{font-size:22px}.proof-item small{font-size:16px}}</style><style id="pf-wa-20261112">.pf-wa-contact{display:block;background:#178f4e;color:white!important;border-radius:12px;padding:15px 20px;margin:20px 0 5px;font-size:16px;font-weight:800;text-decoration:none}.pf-wa-contact small{display:block;color:#e4ffea;margin-top:5px;font-size:12px}.pf-wa-fixed{position:fixed;right:18px;bottom:20px;z-index:9999;background:#178f4e;color:white!important;box-shadow:0 8px 26px #0003;padding:15px 19px;border-radius:40px;font-size:14px;font-weight:800;text-decoration:none}@media(max-width:600px){.pf-wa-fixed{right:12px;bottom:72px;padding:12px;font-size:12px}}.pf-wa-contact:hover,.pf-wa-fixed:hover{background:#0b6b39}</style></head>
+<style id="pf-proof-service-images-20261112">.proof{background:#f3f8f7}.proof-inner{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;padding:36px 0}.proof-item{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;overflow:hidden;border:1px solid #dce9e8;border-radius:19px;background:white;box-shadow:0 9px 24px rgba(7,31,41,.1);padding:0;gap:0;min-width:0;text-align:center}.proof-item:last-child{border-right:1px solid #dce9e8}.proof-photo{width:100%;height:205px;object-fit:cover;display:block}.proof-text{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:15px 15px 25px}.proof .bubble{width:46px;height:46px;min-width:46px;margin-bottom:12px}.proof-item strong{font-size:clamp(19px,1.65vw,24px);line-height:1.3}.proof-item small{font-size:15px;line-height:1.45;margin-top:10px;color:#35565e}@media(max-width:860px){.proof-inner{gap:12px}.proof-photo{height:160px}.proof-text{padding:13px 11px 20px}.proof-item strong{font-size:19px}}@media(max-width:600px){.proof-inner{display:grid;grid-template-columns:1fr;gap:18px;padding:25px 0}.proof-item{padding:0;border:1px solid #dce9e8;border-radius:18px}.proof-item:last-child{border-bottom:1px solid #dce9e8}.proof-photo{height:200px}.proof-text{padding:16px 14px 24px}.proof-item strong{font-size:22px}.proof-item small{font-size:16px}}</style><style id="pf-wa-20261112">.pf-wa-contact{display:block;background:#178f4e;color:white!important;border-radius:12px;padding:15px 20px;margin:20px 0 5px;font-size:16px;font-weight:800;text-decoration:none}.pf-wa-contact small{display:block;color:#e4ffea;margin-top:5px;font-size:12px}.pf-wa-fixed{position:fixed;right:18px;bottom:20px;z-index:9999;background:#178f4e;color:white!important;box-shadow:0 8px 26px #0003;padding:15px 19px;border-radius:40px;font-size:14px;font-weight:800;text-decoration:none}@media(max-width:600px){.pf-wa-fixed{right:12px;bottom:72px;padding:12px;font-size:12px}}.pf-wa-contact:hover,.pf-wa-fixed:hover{background:#0b6b39}
+/* Écran d'entrée PF Nettoyage — masque seulement la vitrine, pas les liens directs */
+.pf-entry{position:fixed;inset:0;z-index:10000;background:linear-gradient(155deg,#092441 0%,#10365c 58%,#205483 100%);color:white;display:flex;justify-content:center;align-items:center;padding:32px 24px;overflow-y:auto}
+.pf-entry[hidden]{display:none!important}
+.pf-entry-inner{width:min(540px,100%);display:flex;align-items:center;flex-direction:column;text-align:center;gap:0}
+.pf-entry-logo{width:clamp(170px,29vw,235px);height:clamp(150px,26vw,205px);object-fit:contain;margin-bottom:34px}
+.pf-entry h2{font-family:Manrope,'DM Sans',Arial,sans-serif;font-weight:800;font-size:clamp(24px,4.5vw,30px);line-height:1.23;letter-spacing:-.02em;margin:0 0 30px;color:#fff}
+.pf-entry p{font-size:clamp(14px,2.5vw,16px);line-height:1.6;margin:0 0 28px;color:#edf4fc}
+.pf-entry-button{width:100%;min-height:54px;border-radius:11px;border:0;background:#197bbd;color:white;font-family:inherit;font-weight:800;font-size:15px;box-shadow:none;transition:background .2s,transform .2s}
+.pf-entry-button:hover{background:#2492d7;transform:translateY(-2px)}
+.pf-entry-button:focus-visible{outline:3px solid white;outline-offset:4px}
+body.pf-entry-active{overflow:hidden}
+@media(max-width:480px){.pf-entry{padding:28px 22px}.pf-entry-logo{margin-bottom:28px}.pf-entry h2{margin-bottom:26px}.pf-entry p{margin-bottom:25px}.pf-entry-button{min-height:52px}}
+</style></head>
 <body>
+
+<div class="pf-entry" id="pf-entry" role="dialog" aria-modal="true" aria-labelledby="pf-entry-title" hidden>
+  <div class="pf-entry-inner">
+    <img class="pf-entry-logo" src="pf-logo-inline" alt="PF Nettoyage – Facility Services">
+    <h2 id="pf-entry-title">Le propre, c'est notre métier.</h2>
+    <p>Nettoyage, conciergerie, fin de bail et débarras en Suisse romande.</p>
+    <button class="pf-entry-button" id="pf-entry-button" type="button">ENTRER SUR LE SITE →</button>
+  </div>
+</div>
+<script>
+(function(){
+  'use strict';
+  // Les liens profonds (#devis, #agenda...) ouvrent directement le site.
+  if(window.location.hash && window.location.hash !== '#accueil') return;
+  const entry=document.getElementById('pf-entry');
+  const button=document.getElementById('pf-entry-button');
+  if(!entry || !button) return;
+  entry.hidden=false;
+  document.body.classList.add('pf-entry-active');
+  button.addEventListener('click',function(){
+    entry.hidden=true;
+    document.body.classList.remove('pf-entry-active');
+    document.getElementById('main-nav')?.setAttribute('aria-label','Navigation principale');
+    document.getElementById('accueil')?.scrollIntoView({block:'start'});
+    document.querySelector('.head .brand')?.focus({preventScroll:true});
+  });
+})();
+</script>
 <a class="skip" href="#accueil">Aller au contenu</a>
 <!-- Icônes SVG vectorielles du site -->
 <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true"><symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol><symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 3 5.18 2 2 0 0 1 5 3h3a2 2 0 0 1 2 1.72l.6 3a2 2 0 0 1-.57 1.74l-1.27 1.27a16 16 0 0 0 4.48 4.48l1.27-1.27a2 2 0 0 1 1.74-.57l3 .6A2 2 0 0 1 22 16.92Z"/></symbol><symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></symbol><symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 2 1.9 6.1L20 10l-6.1 1.9L12 18l-1.9-6.1L4 10l6.1-1.9L12 2Z"/><path d="m19 18 .8 2.2L22 21l-2.2.8L19 24l-.8-2.2L16 21l2.2-.8L19 18Z"/></symbol><symbol id="i-house" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v11H3V10Z"/><path d="M9 21v-8h6v8"/></symbol><symbol id="i-box" viewBox="0 0 24 24"><path d="m3 7 9-4 9 4v10l-9 4-9-4V7Z"/><path d="m3 7 9 5 9-5M12 12v9"/></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol><symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/></symbol><symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></symbol><symbol id="i-wand" viewBox="0 0 24 24"><path d="m4 20 16-16M13 3l1 3m7 5-3-1M3 13l3 1"/></symbol><symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol><symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol></svg>
