@@ -12,8 +12,8 @@ const TYPES = {
   doc: ['application/msword'],
   docx: ['application/vnd.openxmlformats-officedocument.wordprocessingml.document']
 };
-function field(v, max, required = false) {
-  if (typeof v !== 'string' || v.trim().length > max || (required && !v.trim()) || /[\u0000-\u001f]/.test(v)) throw Error('invalid_input');
+function field(v, max, required = false, multiline = false) {
+  if (typeof v !== 'string' || v.trim().length > max || (required && !v.trim()) || (multiline ? /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/ : /[\u0000-\u001f]/).test(v)) throw Error('invalid_input');
   return v.trim();
 }
 function validateFile(f) {
@@ -48,7 +48,7 @@ module.exports = async function appelOffres(req, res) {
       entreprise:field(data.entreprise,160,true), contact:field(data.contact,160,true),
       email:field(data.email,254,true), telephone:field(data.telephone,50,true),
       commune:field(data.commune,160,true), prestation:field(data.prestation,140,true),
-      delai:field(data.delai || '',120), description:field(data.description,6000,true),
+      delai:field(data.delai || '',120), description:field(data.description,6000,true,true),
       documents:data.documents
     };
     if (!EMAIL.test(data.email) || /[\r\n]/.test(data.entreprise+data.contact+data.email+data.telephone)) throw Error('invalid_input');
