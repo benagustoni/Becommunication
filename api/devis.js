@@ -86,9 +86,12 @@ function smtpConfig() {
   }
   const from = process.env.QUOTE_FROM_EMAIL || 'PF Nettoyage <devis@pfnettoyage.ch>';
   const to = process.env.QUOTE_TO_EMAIL || 'pfnettoyage@gmail.com';
-  const cc = (process.env.QUOTE_CC_EMAIL || '').trim();
+  const ccRaw = (process.env.QUOTE_CC_EMAIL || '').trim();
+  const cc = ccRaw ? ccRaw.split(',').map(value => value.trim()) : [];
+  const recipients = [to, ...cc];
   if (!host || /[^a-z0-9.-]/.test(host) || ![465, 587].includes(port) || !EMAIL.test(user) || !pass.trim() ||
-      !mailbox(from) || !mailbox(to) || (cc && !mailbox(cc))) {
+      !mailbox(from) || recipients.some(value => !mailbox(value)) ||
+      new Set(recipients.map(value => mailbox(value).toLowerCase())).size !== recipients.length) {
     const error = new Error('smtp_configuration_missing_or_invalid');
     error.code = 'SMTP_CONFIG';
     throw error;
@@ -100,7 +103,7 @@ function smtpConfig() {
       connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 20000,
       logger: false, debug: false,
     },
-    from, to, cc: cc || undefined,
+    from, to, cc: cc.length ? cc : undefined, recipients,
   };
 }
 
@@ -254,8 +257,8 @@ module.exports = async function devis(req, res) {
       subject: 'Demande de devis - ' + p.service,
       text,
     });
-    assertAccepted(result, config.to);
-    console.log('quote_sent', { reference, accepted: true, provider: 'smtp', pdfAttached: false });
+    for (const recipient of config.recipients) assertAccepted(result, recipient);
+    console.log('quote_sent', { reference, accepted: true, recipientsAccepted: config.recipients.length, provider: 'smtp', pdfAttached: false });
 
     // Auto-acknowledgement only after the business mailbox has accepted the request.
     // It is optional: never claim a customer confirmation was sent if it failed.
