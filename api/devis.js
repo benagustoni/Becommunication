@@ -52,6 +52,7 @@ function parseQuote(body) {
     }
   }
   if (!['À convenir', 'Matin (08h00–12h00)', 'Après-midi (13h00–18h00)', 'Soir (18h00–22h00)', 'Autre horaire'].includes(p.preferredTime) || (body.urgent !== undefined && typeof body.urgent !== 'boolean')) throw new Error('invalid_input');
+  p.urgentLocation = p.urgent ? cleanPoint(body.urgentLocation) : null;
   if (p.service === 'Déménagement') {
     p.from = cleanPoint(body.from, true);
     p.to = cleanPoint(body.to, true);
@@ -237,6 +238,7 @@ module.exports = async function devis(req, res) {
     'E-mail : ' + (p.email || 'Non communiqué'), 'Prestation : ' + p.service,
     'Date souhaitée : ' + (p.desiredDate || 'À convenir'), 'Pièces : ' + (p.pieces || 'Non précisé'),
     'Intervention urgente : ' + (p.urgent ? 'Oui' : 'Non'), 'Créneau horaire souhaité : ' + p.preferredTime,
+    ...(p.urgentLocation ? ['Lieu de l’intervention urgente : ' + pointText(p.urgentLocation)] : []),
     ...(p.location ? ['Lieu : ' + pointText(p.location)] : ['Départ : ' + pointText(p.from), 'Arrivée : ' + pointText(p.to)]),
     '', p.description, '', 'Demande sans engagement. Aucun rendez-vous confirmé automatiquement.',
   ].join('\n');
