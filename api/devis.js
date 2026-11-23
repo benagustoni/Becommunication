@@ -52,6 +52,9 @@ function parseQuote(body) {
     }
   }
   if (!['À convenir', 'Matin (08h00–12h00)', 'Après-midi (13h00–18h00)', 'Soir (18h00–22h00)', 'Autre horaire'].includes(p.preferredTime) || (body.urgent !== undefined && typeof body.urgent !== 'boolean')) throw new Error('invalid_input');
+  if (p.urgent && (!p.desiredDate || !p.preferredTime || p.preferredTime === 'À convenir')) {
+    throw new Error('invalid_input');
+  }
   p.urgentLocation = p.urgent ? cleanPoint(body.urgentLocation) : null;
   if (p.service === 'Déménagement') {
     p.from = cleanPoint(body.from, true);
