@@ -38,6 +38,8 @@ function parseQuote(body) {
     description: cleanString(body.description, 12000, true),
     pieces: cleanString(body.pieces, 40),
     desiredDate: cleanString(body.desiredDate, 10),
+    urgent: body.urgent === true,
+    preferredTime: cleanString(body.preferredTime || 'À convenir', 80),
   };
   if (/[\r\n]/.test(p.name + p.telephone + p.email + p.service) || (p.email && !EMAIL.test(p.email))) {
     throw new Error('invalid_input');
@@ -49,6 +51,7 @@ function parseQuote(body) {
       throw new Error('invalid_input');
     }
   }
+  if (!['À convenir', 'Matin (08h00–12h00)', 'Après-midi (13h00–18h00)', 'Soir (18h00–22h00)', 'Autre horaire'].includes(p.preferredTime) || (body.urgent !== undefined && typeof body.urgent !== 'boolean')) throw new Error('invalid_input');
   if (p.service === 'Déménagement') {
     p.from = cleanPoint(body.from, true);
     p.to = cleanPoint(body.to, true);
@@ -233,6 +236,7 @@ module.exports = async function devis(req, res) {
     'Nom : ' + p.name, 'Téléphone : ' + p.telephone,
     'E-mail : ' + (p.email || 'Non communiqué'), 'Prestation : ' + p.service,
     'Date souhaitée : ' + (p.desiredDate || 'À convenir'), 'Pièces : ' + (p.pieces || 'Non précisé'),
+    'Intervention urgente : ' + (p.urgent ? 'Oui' : 'Non'), 'Créneau horaire souhaité : ' + p.preferredTime,
     ...(p.location ? ['Lieu : ' + pointText(p.location)] : ['Départ : ' + pointText(p.from), 'Arrivée : ' + pointText(p.to)]),
     '', p.description, '', 'Demande sans engagement. Aucun rendez-vous confirmé automatiquement.',
   ].join('\n');
