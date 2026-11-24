@@ -163,7 +163,45 @@ body.pf-entry-active{overflow:hidden}
 .tender-upload-status{margin:15px 0 0;padding:13px 15px;border-radius:10px;background:#e9f4fb;color:#10365c}
 .tender-upload-status.error{background:#fff0ef;color:#9f2525}.tender-honeypot{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 @media(max-width:620px){.tender-upload-fields{grid-template-columns:1fr}.tender-submit{width:100%}}
-</style></head>
+</style><style id="pf-premium-motion-2026">
+/* PF Nettoyage — mouvements premium légers, sans dépendances externes */
+:root{--pf-gold:#ddbb86}
+.hero{isolation:isolate}
+.hero:after{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 46% 48% at 77% 28%,rgba(8,193,185,.13),transparent 75%);animation:pfAura 11s ease-in-out infinite alternate}
+.hero-layout{z-index:1}
+.hero-copy h1 em{background:linear-gradient(100deg,#73dfd2,#d6faf1,#8acfbf);-webkit-background-clip:text;background-clip:text;color:transparent;background-size:220% 100%;animation:pfShimmer 9s ease-in-out infinite alternate}
+.hero-buttons .btn:not(.ghost){background:linear-gradient(115deg,#007d79,#03a69a,#087d87);background-size:190% 100%;box-shadow:0 10px 29px rgba(0,152,143,.26);transition:transform .25s ease,box-shadow .25s ease,background-position .4s ease}
+.hero-buttons .btn:not(.ghost):hover{transform:translateY(-3px);background-position:100% 0;box-shadow:0 15px 34px rgba(0,152,143,.34)}
+.service-card,.gallery-item,.proof-item{transition:transform .32s cubic-bezier(.2,.7,.2,1),box-shadow .32s ease,border-color .32s ease}
+.service-card{position:relative}
+.service-card:before{content:"";height:3px;position:absolute;left:16px;right:16px;top:0;background:linear-gradient(90deg,#008d88,#88e0d2,var(--pf-gold));transform:scaleX(0);transform-origin:left;transition:transform .35s ease;z-index:2;border-radius:10px}
+.service-card:hover{transform:translateY(-7px);border-color:#96d6c9;box-shadow:0 20px 42px rgba(5,45,49,.14)}
+.service-card:hover:before{transform:scaleX(1)}
+.gallery-item:hover{transform:translateY(-4px);box-shadow:0 16px 35px rgba(7,50,49,.15)}
+.proof-item:hover{transform:translateY(-2px)}
+.pf-entry-button{background:linear-gradient(115deg,#0d817e,#118fb5,#268bc4)!important;background-size:190% 100%!important;transition:transform .25s ease,box-shadow .25s ease,background-position .35s ease!important}
+.pf-entry-button:hover{background-position:100% 0!important;box-shadow:0 14px 36px rgba(18,145,179,.24)!important}
+@keyframes pfAura{from{opacity:.46;transform:translate3d(-2%,1%,0) scale(1)}to{opacity:1;transform:translate3d(2%,-1%,0) scale(1.04)}}
+@keyframes pfShimmer{from{background-position:0 50%}to{background-position:100% 50%}}
+@keyframes pfEntrance{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pfReveal{from{opacity:0;transform:translateY(23px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:no-preference){
+ body.pf-premium-ready:not(.pf-entry-active) .hero-copy .eyebrow{animation:pfEntrance .65s ease both}
+ body.pf-premium-ready:not(.pf-entry-active) .hero-copy h1{animation:pfEntrance .8s .09s ease both}
+ body.pf-premium-ready:not(.pf-entry-active) .hero-copy>p{animation:pfEntrance .8s .2s ease both}
+ body.pf-premium-ready:not(.pf-entry-active) .hero-buttons{animation:pfEntrance .8s .31s ease both}
+ body.pf-premium-ready:not(.pf-entry-active) .hero-visual{animation:pfEntrance .95s .23s ease both}
+ .pf-reveal{opacity:0;transform:translateY(23px)}
+ .pf-reveal.pf-in-view{animation:pfReveal .75s cubic-bezier(.2,.75,.25,1) both}
+}
+@media(max-width:600px){.service-card:hover,.gallery-item:hover,.proof-item:hover{transform:none}.hero:after{animation-duration:16s}}
+@media(prefers-reduced-motion:reduce){
+ .hero:after,.hero-copy h1 em{animation:none!important}
+ .service-card,.gallery-item,.proof-item,.pf-entry-button,.hero-buttons .btn{transition:none!important}
+ .pf-reveal{opacity:1!important;transform:none!important}
+}
+</style>
+</head>
 <body>
 
 <div class="pf-entry" id="pf-entry" role="dialog" aria-modal="true" aria-labelledby="pf-entry-title" hidden>
@@ -762,5 +800,19 @@ form.addEventListener('submit',async function(event){
 });
 })();
 </script>
-</body>
+<script id="pf-premium-interactions-2026">
+(function(){
+  'use strict';
+  if(!document.body)return;
+  document.body.classList.add('pf-premium-ready');
+  if(!window.IntersectionObserver||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const targets=document.querySelectorAll('.section-top,.service-card,.proof-item,.gallery-item,.agenda-top,.agenda-side,.why-tiles,.contact-grid');
+  const observer=new IntersectionObserver(entries=>{
+    for(const entry of entries)if(entry.isIntersecting){entry.target.classList.add('pf-in-view');observer.unobserve(entry.target);}
+  },{rootMargin:'0px 0px -35px 0px',threshold:0.08});
+  targets.forEach((el,i)=>{el.classList.add('pf-reveal');el.style.animationDelay=Math.min(i%3,2)*80+'ms';observer.observe(el);});
+  const entryButton=document.getElementById('pf-entry-button');
+  if(entryButton)entryButton.addEventListener('click',()=>document.body.classList.remove('pf-entry-active'),{once:true});
+})();
+</script></body>
 </html>
