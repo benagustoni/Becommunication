@@ -7,6 +7,9 @@
     "api/devis.js": {
       "maxDuration": 60,
       "includeFiles": "lib/**"
+    },
+    "api/prestataires.js": {
+      "maxDuration": 60
     }
   }
 }
