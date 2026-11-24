@@ -3,7 +3,7 @@ const nodemailer=require('nodemailer');
 const {randomUUID}=require('node:crypto');
 const EMAIL=/^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/;
 const recent=new Map();
-function str(v,max,required=false){if(typeof v!=='string'||v.length>max||(required&&!v.trim())||/[\u0000-\u001f]/.test(v))throw Error('invalid_input');return v.trim();}
+function str(v,max,required=false,multiline=false){if(typeof v!=='string'||v.length>max||(required&&!v.trim())||(multiline?/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/:/[\u0000-\u001f]/).test(v))throw Error('invalid_input');return v.trim();}
 function doc(f){if(!f||typeof f!=='object')throw Error('invalid_file');const name=str(f.name,110,true);if(/[\\/]/.test(name))throw Error('invalid_file');const ext=name.split('.').pop().toLowerCase();const types={pdf:'application/pdf',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg'};if(!types[ext]||f.type!==types[ext]||typeof f.data!=='string'||f.data.length>1400000||!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(f.data))throw Error('invalid_file');const buffer=Buffer.from(f.data,'base64');if(!buffer.length||buffer.length>1000000||buffer.toString('base64')!==f.data)throw Error('invalid_file');if(ext==='pdf'&&buffer.subarray(0,5).toString()!=='%PDF-')throw Error('invalid_file');if(ext==='png'&&buffer.subarray(0,8).toString('hex')!=='89504e470d0a1a0a')throw Error('invalid_file');if((ext==='jpg'||ext==='jpeg')&&buffer.subarray(0,3).toString('hex')!=='ffd8ff')throw Error('invalid_file');return {filename:name,content:buffer,contentType:f.type};}
 module.exports=async function prestataires(req,res){
  res.setHeader('Cache-Control','no-store');
@@ -16,7 +16,7 @@ module.exports=async function prestataires(req,res){
   if(!b||typeof b!=='object'||Array.isArray(b)||Buffer.byteLength(JSON.stringify(b),'utf8')>3000000)throw Error('invalid_input');
   if(b.website)return res.status(200).json({ok:true,skipped:true});
   if(b.acceptPrivacy!==true)throw Error('invalid_input');
-  p={entreprise:str(b.entreprise,150,true),contact:str(b.contact,120,true),email:str(b.email,254,true),telephone:str(b.telephone,60,true),ide:str(b.ide||'',40),commune:str(b.commune,130,true),regions:str(b.regions,400,true),prestations:str(b.prestations,600,true),description:str(b.description,2500,true),acceptPrivacy:true};
+  p={entreprise:str(b.entreprise,150,true),contact:str(b.contact,120,true),email:str(b.email,254,true),telephone:str(b.telephone,60,true),ide:str(b.ide||'',40),commune:str(b.commune,130,true),regions:str(b.regions,400,true),prestations:str(b.prestations,600,true),description:str(b.description,2500,true,true),acceptPrivacy:true};
   if(!EMAIL.test(p.email))throw Error('invalid_input');
   if(!Array.isArray(b.documents)||b.documents.length>2)throw Error('invalid_file');
   attachments=b.documents.map(doc);
