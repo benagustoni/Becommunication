@@ -51,6 +51,8 @@ function parseQuote(body) {
       throw new Error('invalid_input');
     }
   }
+  // Holiday closure: unavailable dates must not be submitted even with a manual date entry.
+  if (p.desiredDate >= '2026-12-21' && p.desiredDate <= '2027-01-04') throw new Error('invalid_input');
   if (!['À convenir', 'Matin (08h00–12h00)', 'Après-midi (13h00–18h00)', 'Soir (18h00–22h00)', 'Autre horaire'].includes(p.preferredTime) || (body.urgent !== undefined && typeof body.urgent !== 'boolean')) throw new Error('invalid_input');
   if (p.urgent && (!p.desiredDate || !p.preferredTime || p.preferredTime === 'À convenir')) {
     throw new Error('invalid_input');
