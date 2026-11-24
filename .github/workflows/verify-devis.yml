@@ -1,0 +1,24 @@
+name: Verify devis attachments
+on:
+  push:
+    branches:
+      - feature/devis-photos-pdf-20261124
+  pull_request:
+    paths:
+      - 'api/devis.js'
+      - 'lib/quote-document.cjs'
+      - 'tests/devis-attachments.test.cjs'
+      - 'public/index.html'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --check api/devis.js
+      - run: node --check lib/quote-document.cjs
+      - run: node --test tests/devis-attachments.test.cjs
