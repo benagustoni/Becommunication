@@ -621,7 +621,7 @@ if(pfPhotoInput)pfPhotoInput.addEventListener('change',()=>{
    const result=await response.json();
    if(response.status===429){notice('Veuillez patienter une minute avant de réessayer.',true);return;}
    if(!response.ok||!result.ok)throw new Error('send_failed');
-   const received='Votre demande de devis a bien été envoyée. Nous vous contacterons prochainement.';
+   const received='Votre demande de devis a été acceptée par le serveur de messagerie. Référence : '+(result.reference||'communiquée par notre équipe')+'. Nous vous contacterons prochainement.'+(payload.email&&!result.confirmationSent?' La confirmation automatique par e-mail n’a pas pu être confirmée. Inutile de renvoyer votre demande.':'');
    notice(received,false);
    form.reset();
   } catch(error) {
