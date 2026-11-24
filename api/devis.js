@@ -284,8 +284,14 @@ module.exports = async function devis(req, res) {
       subject: 'Demande de devis - ' + p.service,
       text, attachments: [pdf, ...p.photos],
     });
-    for (const recipient of config.recipients) assertAccepted(result, recipient);
-    console.log('quote_sent', { reference, accepted: true, recipientsAccepted: config.recipients.length, provider: 'smtp', pdfAttached: true, photoCount: p.photos.length });
+    // A confirmed primary recipient means the request was accepted.
+    // Rejected optional CCs are logged separately to avoid telling the user to resend
+    // and creating duplicate requests at the primary mailbox.
+    assertAccepted(result, config.to);
+    const missingCopies = (config.cc || []).filter(address => !result.accepted.some(accepted =>
+      mailbox(String(accepted)).toLowerCase() === mailbox(address).toLowerCase())).length;
+    if (missingCopies) console.error('quote_cc_not_accepted', { reference, missingCopies });
+    console.log('quote_sent', { reference, accepted: true, recipientsAccepted: result.accepted.length, provider: 'smtp', pdfAttached: true, photoCount: p.photos.length });
 
     // Auto-acknowledgement only after the business mailbox has accepted the request.
     // It is optional: never claim a customer confirmation was sent if it failed.
@@ -329,7 +335,7 @@ module.exports = async function devis(req, res) {
         console.error('quote_customer_confirmation_failed', { reference, ...safeError(confirmationError) });
       }
     }
-    return res.status(200).json({ ok: true, reference, confirmationSent });
+    return res.status(200).json({ ok: true, reference, confirmationSent, partialDelivery: missingCopies > 0 });
   } catch (error) {
     console.error('quote_send_failed', { reference, ...safeError(error) });
     return res.status(502).json({ ok: false, error: 'sending_failed' });
