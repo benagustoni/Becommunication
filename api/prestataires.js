@@ -60,7 +60,7 @@ module.exports=async function prestataires(req,res){
           'Site : https://www.pfnettoyage.ch',
           '',
           'Ceci est un accusé de réception automatique.'
-        ].join('\\n')
+        ].join('\n')
       });
       confirmationSent=Array.isArray(confirmation.accepted)&&confirmation.accepted.some(a=>a.toLowerCase()===p.email.toLowerCase());
       console.log('prestataire_ack',{ref,accepted:confirmationSent});
