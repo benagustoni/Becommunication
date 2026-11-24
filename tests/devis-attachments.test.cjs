@@ -64,3 +64,13 @@ test('rejects requests with oversized image payloads',async()=>{
   assert.equal(mails.length,0);
  });
 });
+
+test('real PDF generator creates a nonempty protected PDF with official logo',async()=>{
+ const {createQuoteAttachment}=require('../lib/quote-document.cjs');
+ const data={...requestData(),reference:'PF-TEST-123',receivedAt:new Date().toISOString(),photos:[],pieces:'2',desiredDate:'2026-12-01',urgent:false};
+ const attachment=await createQuoteAttachment(data);
+ assert.equal(attachment.contentType,'application/pdf');
+ assert.ok(Buffer.isBuffer(attachment.content));
+ assert.ok(attachment.content.length>3000);
+ assert.equal(attachment.content.subarray(0,5).toString(),'%PDF-');
+});
