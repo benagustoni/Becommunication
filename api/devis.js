@@ -84,7 +84,7 @@ function photoAttachments(input) {
     const buf = Buffer.from(file.data,'base64');
     if (!buf.length || buf.length > MAX_PHOTO_BYTES || buf.toString('base64') !== file.data) throw new Error('invalid_photos');
     const jpeg = type === 'image/jpeg' && buf.length > 8 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff && buf[buf.length - 2] === 0xff && buf[buf.length - 1] === 0xd9;
-    const png = type === 'image/png' && buf.length > 24 && buf.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])) && buf.subarray(buf.length-12,buf.length-8).toString('ascii') === 'IEND';
+    const png = type === 'image/png' && buf.length > 24 && buf.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])) && buf.subarray(buf.length-8,buf.length-4).toString('ascii') === 'IEND';
     if (!jpeg && !png) throw new Error('invalid_photos');
     return {filename:'Photo-devis-'+(index+1)+(jpeg?'.jpg':'.png'),content:buf,contentType:type};
   });
