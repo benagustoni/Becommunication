@@ -274,6 +274,22 @@ body.pf-entry-active{overflow:hidden}
  body{padding-bottom:0!important}
 }
 @media print{.pf-mobile-quick,.pf-wa-fixed{display:none!important}}
+</style><style id="pf-demande-rapide-preserve">
+/* Nouveaux accès rapides, couleurs et structure de PF Nettoyage préservées. */
+.pf-demande-rapide{padding:clamp(34px,5vw,65px) 0;background:var(--bg,#f5f9f8);border-top:1px solid var(--line,#d8e7e4);border-bottom:1px solid var(--line,#d8e7e4)}
+.pf-demande-rapide-title{text-align:center;max-width:750px;margin:0 auto 23px}
+.pf-demande-rapide-title h2{font-size:clamp(26px,3.6vw,40px);line-height:1.16;margin:6px 0 10px;color:var(--dark,#0b2930)}
+.pf-demande-rapide-title p{color:var(--gray,#556d72);margin:0}
+.pf-demande-rapide-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.pf-demande-rapide-card{position:relative;background:#fff;border:1px solid var(--line,#d8e7e4);border-radius:16px;padding:22px 24px;min-height:166px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;color:var(--dark,#0b2930);text-decoration:none;box-shadow:0 8px 24px #0b293012;transition:transform .16s,box-shadow .16s}
+.pf-demande-rapide-card>span{font-size:27px;line-height:1;color:var(--teal,#128e86)}
+.pf-demande-rapide-card strong{font-size:18px;line-height:1.25}
+.pf-demande-rapide-card small{font-size:13px;line-height:1.4;color:var(--gray,#556d72);padding-right:18px}
+.pf-demande-rapide-card>b{position:absolute;right:22px;bottom:18px;color:var(--teal,#128e86);font-size:20px}
+.pf-demande-rapide-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px #0b293022}
+.pf-demande-rapide-card:focus-visible{outline:3px solid var(--teal,#128e86);outline-offset:4px}
+@media(max-width:760px){.pf-demande-rapide-grid{grid-template-columns:1fr}.pf-demande-rapide-card{min-height:116px;padding:17px 20px;gap:4px}.pf-demande-rapide-card>span{font-size:22px}.pf-demande-rapide-card>b{right:18px;bottom:12px}}
+@media(prefers-reduced-motion:reduce){.pf-demande-rapide-card{transition:none}}
 </style></head>
 <body>
 
@@ -345,6 +361,13 @@ body.pf-entry-active{overflow:hidden}
 <article class="pf-polish-benefit"><h3>⌖ Prestations en Suisse romande</h3><p>Nettoyage privé et professionnel, conciergerie, vitres, fin de bail, débarras et déménagement.</p></article>
 <article class="pf-polish-benefit"><h3>☎ Un contact direct</h3><p>Une question ou une urgence ? <a href="tel:+41799670295">+41 79 967 02 95</a>. Intervention selon disponibilité et confirmation.</p></article>
 </div></section>
+<section class="pf-demande-rapide" aria-labelledby="pf-demande-rapide-titre"><div class="container">
+<div class="pf-demande-rapide-title"><span class="eyebrow">Accès rapide</span><h2 id="pf-demande-rapide-titre">Comment pouvons-nous vous aider ?</h2><p>Sélectionnez votre besoin pour accéder directement au formulaire de devis gratuit, sans engagement.</p></div>
+<div class="pf-demande-rapide-grid">
+<a href="#devis" class="pf-demande-rapide-card" data-pf-quick-service="Nettoyage &amp; entretien"><span aria-hidden="true">✦</span><strong>Demander un nettoyage</strong><small>Logements, bureaux et entretien régulier</small><b aria-hidden="true">→</b></a>
+<a href="#devis" class="pf-demande-rapide-card" data-pf-quick-service="Nettoyage d'immeuble / conciergerie"><span aria-hidden="true">⌂</span><strong>Demander une conciergerie</strong><small>Immeubles, gérances et parties communes</small><b aria-hidden="true">→</b></a>
+<a href="#devis" class="pf-demande-rapide-card" data-pf-quick-urgent="true"><span aria-hidden="true">◷</span><strong>Intervention urgente</strong><small>Date et disponibilité à confirmer par notre équipe</small><b aria-hidden="true">→</b></a>
+</div></div></section>
 <section class="section steps-wrap" id="fonctionnement"><div class="container"><div class="section-top"><span class="eyebrow">Simple & efficace</span><h2>Votre intervention en <span style="color:var(--teal)">4 étapes.</span></h2><p>Un processus clair, de votre premier message jusqu'à la réalisation du nettoyage.</p></div><div class="steps-grid"><article class="step"><span class="step-count">01 — CONTACT</span><h3>Expliquez votre besoin</h3><p>Dites-nous ce qu'il faut nettoyer, l'adresse et la date souhaitée.</p></article><article class="step"><span class="step-count">02 — DEVIS</span><h3>Recevez une proposition</h3><p>Nous prenons connaissance de votre demande et vous communiquons les conditions.</p></article><article class="step"><span class="step-count">03 — PLANIFICATION</span><h3>Fixons une date</h3><p>Nous convenons ensemble du créneau selon les disponibilités.</p></article><article class="step"><span class="step-count">04 — INTERVENTION</span><h3>Place au propre</h3><p>Notre équipe intervient selon les prestations convenues.</p></article></div></div></section>
 <section class="section why" id="engagements"><div class="container why-inner"><div><span class="eyebrow">PF NETTOYAGE</span><h2>La propreté, avec le souci du détail.</h2><p>Parce qu'un nettoyage réussi se voit au premier regard, nous prenons le temps de comprendre votre demande et d'organiser une prestation adaptée.</p><a class="btn outline" href="#devis">Parlons de votre projet →</a></div><div class="why-tiles"><div class="why-tile"><svg class="ico"><use href="#i-check"/></svg><strong>Un service adapté</strong><p>Une réponse personnalisée selon les lieux et les travaux à effectuer.</p></div><div class="why-tile"><svg class="ico"><use href="#i-clock"/></svg><strong>Des rendez-vous planifiés</strong><p>Nous convenons d'une intervention selon votre calendrier et le nôtre.</p></div><div class="why-tile"><svg class="ico"><use href="#i-spark"/></svg><strong>Le sens du détail</strong><p>Une attention particulière aux surfaces, recoins et finitions.</p></div><div class="why-tile"><svg class="ico"><use href="#i-mail"/></svg><strong>Devis sans engagement</strong><p>Présentez votre besoin avant de décider en toute liberté.</p></div></div></div></section>
 <section class="gallery section" id="galerie" aria-labelledby="gallery-title"><div class="container">
@@ -944,5 +967,19 @@ form.addEventListener('submit',async function(event){
   const entryButton=document.getElementById('pf-entry-button');
   if(entryButton)entryButton.addEventListener('click',()=>document.body.classList.remove('pf-entry-active'),{once:true});
 })();
-</script><script id="pf-prefill-service-2026">(function(){const params=new URLSearchParams(location.search);const wanted=params.get('service');if(!wanted)return;const aliases={'Conciergerie & immeubles':"Nettoyage d'immeuble / conciergerie"};const value=aliases[wanted]||wanted;function fill(){const select=document.getElementById('service');if(!select)return;const option=[...select.options].find(o=>o.value===value||o.textContent.trim()===value);if(option){select.value=option.value;select.dispatchEvent(new Event('change',{bubbles:true}));}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',fill,{once:true});else fill();})();</script><nav class="pf-mobile-quick" aria-label="Contacts rapides sur mobile"><a href="tel:+41799670295">☎ Appeler</a><a href="https://wa.me/41799670295?text=Bonjour%2C%20je%20vous%20contacte%20depuis%20www.pfnettoyage.ch" target="_blank" rel="noopener noreferrer">WhatsApp</a><a href="#devis">✎ Devis gratuit</a></nav></body>
+</script><script id="pf-prefill-service-2026">(function(){const params=new URLSearchParams(location.search);const wanted=params.get('service');if(!wanted)return;const aliases={'Conciergerie & immeubles':"Nettoyage d'immeuble / conciergerie"};const value=aliases[wanted]||wanted;function fill(){const select=document.getElementById('service');if(!select)return;const option=[...select.options].find(o=>o.value===value||o.textContent.trim()===value);if(option){select.value=option.value;select.dispatchEvent(new Event('change',{bubbles:true}));}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',fill,{once:true});else fill();})();</script><nav class="pf-mobile-quick" aria-label="Contacts rapides sur mobile"><a href="tel:+41799670295">☎ Appeler</a><a href="https://wa.me/41799670295?text=Bonjour%2C%20je%20vous%20contacte%20depuis%20www.pfnettoyage.ch" target="_blank" rel="noopener noreferrer">WhatsApp</a><a href="#devis">✎ Devis gratuit</a></nav><script id="pf-demande-rapide-js">(function(){'use strict';
+document.addEventListener('click',function(ev){
+ const link=ev.target.closest&&ev.target.closest('[data-pf-quick-service],[data-pf-quick-urgent]');
+ if(!link)return;
+ const service=document.getElementById('service');
+ if(link.dataset.pfQuickService&&service){
+  const option=[...service.options].find(o=>o.value===link.dataset.pfQuickService||o.textContent.trim()===link.dataset.pfQuickService);
+  if(option){service.value=option.value;service.dispatchEvent(new Event('change',{bubbles:true}));}
+ }
+ if(link.dataset.pfQuickUrgent==='true'){
+  const urgent=document.getElementById('intervention-urgente');
+  if(urgent){urgent.checked=true;urgent.dispatchEvent(new Event('change',{bubbles:true}));}
+ }
+});
+})();</script></body>
 </html>
