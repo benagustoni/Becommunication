@@ -264,6 +264,16 @@ body.pf-entry-active{overflow:hidden}
 .quote-form input:focus-visible,.quote-form select:focus-visible,.quote-form textarea:focus-visible{outline:3px solid #4cc5bd;outline-offset:2px}
 @media(max-width:740px){.pf-polish-benefits-grid{grid-template-columns:1fr}.hero .hero-buttons .btn{width:100%;text-align:center}.pf-polish-benefits{padding:22px 0}.pf-polish-benefit{padding:15px}.quote-form .fields{grid-template-columns:1fr}.quote-form .field{min-width:0}}
 @media(prefers-reduced-motion:reduce){.hero .hero-buttons .btn{transition:none}}
+</style><style id="pf-mobile-no-overlay-20261125">
+/* Sur smartphone, aucune barre de contact ne recouvre l'image ni la bande verte WhatsApp. */
+@media(max-width:760px){
+ .floating-cta{display:none!important}
+ .pf-wa-fixed{position:relative!important;right:auto!important;bottom:auto!important;z-index:auto!important;display:flex;align-items:center;justify-content:center;width:calc(100% - 32px);margin:18px auto 12px;padding:13px 16px;text-align:center;border-radius:24px;box-shadow:0 5px 16px #061f2930;min-height:48px}
+ .pf-mobile-quick{position:relative!important;bottom:auto!important;left:auto!important;right:auto!important;z-index:auto!important;margin-top:14px;padding:9px 10px calc(10px + env(safe-area-inset-bottom));box-shadow:none;min-height:62px}
+ .pf-mobile-quick a{min-height:44px;display:flex;align-items:center;justify-content:center;white-space:normal;line-height:1.25}
+ body{padding-bottom:0!important}
+}
+@media print{.pf-mobile-quick,.pf-wa-fixed{display:none!important}}
 </style></head>
 <body>
 
