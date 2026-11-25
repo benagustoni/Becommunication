@@ -3,6 +3,7 @@
 const nodemailer = require('nodemailer');
 const net = require('node:net');
 const { randomUUID } = require('node:crypto');
+const { createQuoteAttachment } = require('../lib/quote-document.cjs');
 
 // Best-effort instance-local protection; this is not a shared rate-limit store.
 const recent = new Map();
@@ -66,6 +67,27 @@ function parseQuote(body) {
     p.to = null;
   }
   return p;
+}
+
+
+const MAX_REQUEST_BYTES = 1700000;
+const MAX_PHOTOS = 2;
+const MAX_PHOTO_BYTES = 450000;
+function photoAttachments(input) {
+  if (input === undefined || input === null) return [];
+  if (!Array.isArray(input) || input.length > MAX_PHOTOS) throw new Error('invalid_photos');
+  return input.map((file, index) => {
+    if (!file || typeof file !== 'object' || Array.isArray(file)) throw new Error('invalid_photos');
+    const type = file.type;
+    if (!['image/jpeg', 'image/png'].includes(type) || typeof file.data !== 'string' ||
+        !/^[A-Za-z0-9+/]+={0,2}$/.test(file.data) || file.data.length > 610000) throw new Error('invalid_photos');
+    const buf = Buffer.from(file.data,'base64');
+    if (!buf.length || buf.length > MAX_PHOTO_BYTES || buf.toString('base64') !== file.data) throw new Error('invalid_photos');
+    const jpeg = type === 'image/jpeg' && buf.length > 8 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff && buf[buf.length - 2] === 0xff && buf[buf.length - 1] === 0xd9;
+    const png = type === 'image/png' && buf.length > 24 && buf.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])) && buf.subarray(buf.length-8,buf.length-4).toString('ascii') === 'IEND';
+    if (!jpeg && !png) throw new Error('invalid_photos');
+    return {filename:'Photo-devis-'+(index+1)+(jpeg?'.jpg':'.png'),content:buf,contentType:type};
+  });
 }
 
 function mailbox(value) {
@@ -210,12 +232,13 @@ module.exports = async function devis(req, res) {
   let p;
   try {
     if (typeof body === 'string') {
-      if (Buffer.byteLength(body, 'utf8') > 20000) throw new Error('invalid_input');
+      if (Buffer.byteLength(body, 'utf8') > MAX_REQUEST_BYTES) throw new Error('invalid_input');
       body = JSON.parse(body);
     }
-    if (!body || typeof body !== 'object' || Array.isArray(body) || Buffer.byteLength(JSON.stringify(body), 'utf8') > 20000) throw new Error('invalid_input');
+    if (!body || typeof body !== 'object' || Array.isArray(body) || Buffer.byteLength(JSON.stringify(body), 'utf8') > MAX_REQUEST_BYTES) throw new Error('invalid_input');
     if (body.honey) return res.status(200).json({ ok: true, confirmation: 'skipped' });
     p = parseQuote(body);
+    p.photos = photoAttachments(body.photos);
   } catch {
     return res.status(400).json({ ok: false, error: 'invalid_request' });
   }
@@ -250,15 +273,25 @@ module.exports = async function devis(req, res) {
   ].join('\n');
   let transport;
   try {
+    const pdf = await createQuoteAttachment(p);
+    if (!pdf || !Buffer.isBuffer(pdf.content) || pdf.content.length < 100 || pdf.content.subarray(0,5).toString() !== '%PDF-') {
+      throw Object.assign(new Error('invalid_pdf'),{code:'EPDF'});
+    }
     transport = createMailer(config.transport);
     const result = await sendWithDeadline(transport, {
       from: config.from, to: config.to, cc: config.cc,
       replyTo: p.email || undefined,
       subject: 'Demande de devis - ' + p.service,
-      text,
+      text, attachments: [pdf, ...p.photos],
     });
-    for (const recipient of config.recipients) assertAccepted(result, recipient);
-    console.log('quote_sent', { reference, accepted: true, recipientsAccepted: config.recipients.length, provider: 'smtp', pdfAttached: false });
+    // A confirmed primary recipient means the request was accepted.
+    // Rejected optional CCs are logged separately to avoid telling the user to resend
+    // and creating duplicate requests at the primary mailbox.
+    assertAccepted(result, config.to);
+    const missingCopies = (config.cc || []).filter(address => !result.accepted.some(accepted =>
+      mailbox(String(accepted)).toLowerCase() === mailbox(address).toLowerCase())).length;
+    if (missingCopies) console.error('quote_cc_not_accepted', { reference, missingCopies });
+    console.log('quote_sent', { reference, accepted: true, recipientsAccepted: result.accepted.length, provider: 'smtp', pdfAttached: true, photoCount: p.photos.length });
 
     // Auto-acknowledgement only after the business mailbox has accepted the request.
     // It is optional: never claim a customer confirmation was sent if it failed.
@@ -278,6 +311,7 @@ module.exports = async function devis(req, res) {
               '',
               'Nous avons bien reçu votre demande de devis auprès de PF Nettoyage – Facility Services.',
               'Référence : ' + reference,
+              'Un récapitulatif PDF de votre demande figure en pièce jointe.',
               '',
               'Notre équipe examinera votre demande et vous contactera prochainement.',
               'Votre demande est gratuite et sans engagement.',
@@ -289,6 +323,7 @@ module.exports = async function devis(req, res) {
               'E-mail : devis@pfnettoyage.ch',
               'Site : https://www.pfnettoyage.ch',
             ].join('\n'),
+            attachments: [pdf],
           });
           assertAccepted(customerReply, p.email);
           confirmationSent = true;
@@ -300,7 +335,7 @@ module.exports = async function devis(req, res) {
         console.error('quote_customer_confirmation_failed', { reference, ...safeError(confirmationError) });
       }
     }
-    return res.status(200).json({ ok: true, reference, confirmationSent });
+    return res.status(200).json({ ok: true, reference, confirmationSent, partialDelivery: missingCopies > 0 });
   } catch (error) {
     console.error('quote_send_failed', { reference, ...safeError(error) });
     return res.status(502).json({ ok: false, error: 'sending_failed' });
