@@ -34,7 +34,7 @@ function parseQuote(body) {
   const p = {
     name: cleanString(body.name, 160, true),
     telephone: cleanString(body.telephone, 80, true),
-    email: cleanString(body.email, 254),
+    email: cleanString(body.email, 254, true),
     service: cleanString(body.service, 160, true),
     description: cleanString(body.description, 12000, true),
     pieces: cleanString(body.pieces, 40),
@@ -42,7 +42,7 @@ function parseQuote(body) {
     urgent: body.urgent === true,
     preferredTime: cleanString(body.preferredTime || 'À convenir', 80),
   };
-  if (/[\r\n]/.test(p.name + p.telephone + p.email + p.service) || (p.email && !EMAIL.test(p.email))) {
+  if (/[\r\n]/.test(p.name + p.telephone + p.email + p.service) || !EMAIL.test(p.email)) {
     throw new Error('invalid_input');
   }
   if (p.desiredDate) {
