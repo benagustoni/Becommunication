@@ -1,5 +1,5 @@
 {rewrites
-
+"correction-admin:
   "framework": null,
   "buildCommand": "echo Build OK",
   "installCommand": "npm ci",
