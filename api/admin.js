@@ -25,6 +25,7 @@ async function change(req,res,auth){if(String(req.headers.origin||'')!==adminOri
 module.exports=async function admin(req,res){A.noStore(res);try{
  const url=new URL(req.url,'https://www.pfnettoyage.ch');const mode=url.searchParams.get('mode')||'';
  if(mode==='login'&&req.method==='GET'){const c=A.cfg();const redirect=adminOrigin()+'/api/admin';const state=crypto.randomBytes(24).toString('base64url');A.setCookie(res,'pf_admin_oauth_state',A.seal({state,at:Date.now()}),600);const q=new URLSearchParams({client_id:c.id,redirect_uri:redirect,response_type:'code',scope:A.SCOPES,state,access_type:'offline',prompt:'consent',include_granted_scopes:'true'});return res.redirect(302,'https://accounts.google.com/o/oauth2/v2/auth?'+q);}
+ if(req.method==='GET'&&url.searchParams.has('error')){A.clearCookie(res,'pf_admin_oauth_state');return res.redirect(302,'/administration.html?error=google');}
  if(req.method==='GET'&&url.searchParams.has('code')){const st=A.unseal(A.cookies(req).pf_admin_oauth_state),state=url.searchParams.get('state')||'';A.clearCookie(res,'pf_admin_oauth_state');if(!st||!state||state!==st.state||Date.now()-st.at>600000)return res.redirect(302,'/administration.html?error=session');
  const c=A.cfg();const token=await A.tokenRequest({client_id:c.id,client_secret:c.secret,code:url.searchParams.get('code'),redirect_uri:adminOrigin()+'/api/admin',grant_type:'authorization_code'});
  const pr=await fetch('https://www.googleapis.com/oauth2/v2/userinfo',{headers:{Authorization:'Bearer '+token.access_token},signal:AbortSignal.timeout(10000)});const user=await pr.json();const email=String(user.email||'').toLowerCase();
@@ -38,4 +39,8 @@ module.exports=async function admin(req,res){A.noStore(res);try{
  if(mode==='data'&&req.method==='GET')return await list(req,res,auth);
  if(mode==='status'&&req.method==='POST')return await change(req,res,auth);
  return fail(res,405,'method_not_allowed');
- }catch(e){console.error('admin_api_error',{code:e.message||'unknown'});return fail(res,503,['oauth_not_configured','admin_origin_not_configured'].includes(e.message)?e.message:'service_unavailable');}};
+ }catch(e){console.error('admin_api_error',{code:e.message||'unknown'});if(req.method==='GET'){
+ const params=new URL(req.url,A.BASE).searchParams;
+ if(params.get('mode')==='login')return res.redirect(302,'/administration.html?error=configuration');
+ if(params.has('code'))return res.redirect(302,'/administration.html?error=google');
+ }return fail(res,503,'service_unavailable');}};
