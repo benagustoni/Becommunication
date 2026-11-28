@@ -631,8 +631,31 @@ if(pfPhotoInput)pfPhotoInput.addEventListener('change',()=>{
    const result=await response.json();
    if(response.status===429){notice('Veuillez patienter une minute avant de réessayer.',true);return;}
    if(!response.ok||!result.ok)throw new Error('send_failed');
-   const received='Votre demande de devis a été acceptée par le serveur de messagerie. Référence : '+(result.reference||'communiquée par notre équipe')+'. Nous vous contacterons prochainement.'+(payload.email&&!result.confirmationSent?' La confirmation automatique par e-mail n’a pas pu être confirmée. Inutile de renvoyer votre demande.':'');
-   notice(received,false);
+   const reference=typeof result.reference==='string'?result.reference:'';
+   const receipt=payload.email&&result.confirmationSent===true
+    ? ' Un accusé de réception avec le PDF a été envoyé à '+payload.email+'.'
+    : payload.email&&result.confirmationSent===false
+    ? ' L’envoi de l’accusé PDF n’a pas pu être confirmé. Votre demande est enregistrée.'
+    : '';
+   notice('Votre demande de devis a été acceptée.'+(reference?' Référence : '+reference+'.':'')+receipt,false);
+   if(reference){
+    const copy=document.createElement('button');
+    copy.type='button';
+    copy.className='btn outline';
+    copy.style.marginTop='12px';
+    copy.textContent='Copier la référence';
+    const feedback=document.createElement('span');
+    feedback.style.display='block';
+    copy.addEventListener('click',async()=>{
+     try{
+      await navigator.clipboard.writeText(reference);
+      feedback.textContent='Référence copiée.';
+     }catch{
+      feedback.textContent='Vous pouvez sélectionner et copier la référence ci-dessus.';
+     }
+    });
+    status.append(document.createElement('br'),copy,feedback);
+   }
    form.reset();
   } catch(error) {
    notice('L’envoi automatique est momentanément indisponible. Votre demande n’a pas été envoyée. Vous pouvez la transmettre par WhatsApp sans ressaisir les informations :',true);
