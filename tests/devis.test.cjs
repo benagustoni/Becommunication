@@ -56,7 +56,7 @@ async function withHandler(options, run) {
     if (id === '../lib/quote-document.cjs') return {
       async createQuoteAttachment(p) {
         state.pdfInputs.push(p);
-        return options.pdfResult === undefined ? { filename: 'test.pdf', content: Buffer.from('%PDF-test'), contentType: 'application/pdf' } : options.pdfResult;
+        return options.pdfResult === undefined ? { filename: 'test.pdf', content: Buffer.from('%PDF-test'.padEnd(100, ' ')), contentType: 'application/pdf' } : options.pdfResult;
       },
     };
     return load.apply(this, arguments);
@@ -88,20 +88,20 @@ test('sends request and receipt with same PDF, desired sender, destination and r
     const response = await invoke();
     assert.equal(response.statusCode, 200);
     assert.equal(response.body.ok, true);
-    assert.equal(response.body.confirmation, 'sent');
+    assert.equal(response.body.confirmationSent, true);
     assert.match(response.body.reference, /^PF-/);
     assert.equal(state.mails.length, 2);
     assert.equal(state.pdfInputs.length, 1);
     assert.equal(state.mails[0].from, 'PF Nettoyage <devis@pfnettoyage.ch>');
     assert.equal(state.mails[0].to, 'pfnettoyage@gmail.com');
     assert.equal(state.mails[0].replyTo, 'pfnettoyage@gmail.com');
-    assert.equal(state.mails[1].replyTo, 'pfnettoyage@gmail.com');
+    assert.equal(state.mails[1].replyTo, 'devis@pfnettoyage.ch');
     assert.equal(state.mails[0].attachments[0], state.mails[1].attachments[0]);
     assert.equal(state.mails[0].attachments[0].contentType, 'application/pdf');
-    assert.match(state.mails[1].text, /Aucun rendez-vous ni tarif/);
+    assert.match(state.mails[1].text, /La date d’intervention reste à confirmer/);
     assert.equal(state.configs[0].secure, true);
     assert.equal(state.configs[0].requireTLS, false);
-    assert.equal(state.closed, 1);
+    assert.equal(state.closed, 2);
   });
 });
 
@@ -138,7 +138,7 @@ test('global receipt deadline closes active socket and preserves accepted reques
   const started = new Promise(resolve => { receiptStarted = resolve; });
   await withHandler({ sendMail(mail, count, state) {
     if (count === 1) return { accepted: [mail.to] };
-    state.configs[0].getSocket(state.configs[0], () => {});
+    state.configs[1].getSocket(state.configs[1], () => {});
     receiptStarted();
     return new Promise(() => {});
   } }, async ({ state, invoke }) => {
@@ -148,12 +148,12 @@ test('global receipt deadline closes active socket and preserves accepted reques
     const response = await pending;
     assert.equal(response.statusCode, 200);
     assert.equal(response.body.ok, true);
-    assert.equal(response.body.confirmation, 'failed');
+    assert.equal(response.body.confirmationSent, false);
     assert.equal(state.mails.length, 2);
-    assert.equal(state.closed, 1);
+    assert.equal(state.closed, 2);
     assert.equal(state.sockets[0].destroyed, true);
     assert.equal(state.logs.filter(row => row[0] === 'quote_sent').length, 1);
-    assert.equal(state.logs.find(row => row[0] === 'quote_confirmation_failed')[1].code, 'ETIMEDOUT');
+    assert.equal(state.logs.find(row => row[0] === 'quote_customer_confirmation_failed')[1].code, 'ETIMEDOUT');
   });
 });
 
@@ -210,17 +210,17 @@ test('receipt failure preserves successful request and avoids asking client to r
     const response = await invoke();
     assert.equal(response.statusCode, 200);
     assert.equal(response.body.ok, true);
-    assert.equal(response.body.confirmation, 'failed');
+    assert.equal(response.body.confirmationSent, false);
     assert.equal(state.mails.length, 2);
     assert.equal(state.logs.filter(row => row[0] === 'quote_sent').length, 1);
-    assert.equal(state.logs.filter(row => row[0] === 'quote_confirmation_failed').length, 1);
+    assert.equal(state.logs.filter(row => row[0] === 'quote_customer_confirmation_failed').length, 1);
   });
 });
 
 test('no customer email sends only the business request', async () => {
   await withHandler({}, async ({ state, invoke }) => {
     const response = await invoke({ ...baseQuote(), email: '' });
-    assert.equal(response.body.confirmation, 'skipped');
+    assert.equal(response.body.confirmationSent, false);
     assert.equal(state.mails.length, 1);
     assert.equal(state.mails[0].replyTo, undefined);
   });
