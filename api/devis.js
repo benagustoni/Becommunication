@@ -1,5 +1,7 @@
 'use strict';
 
+const privacyFooter = 'Protection des données — PF Nettoyage utilise vos données pour traiter votre demande et vous recontacter. Pour en savoir plus et exercer vos droits : https://www.pfnettoyage.ch/confidentialite.html';
+
 const nodemailer = require('nodemailer');
 const net = require('node:net');
 const { randomUUID } = require('node:crypto');
@@ -282,7 +284,7 @@ module.exports = async function devis(req, res) {
       from: config.from, to: config.to, cc: config.cc,
       replyTo: p.email || undefined,
       subject: 'Demande de devis - ' + p.service,
-      text, attachments: [pdf, ...p.photos],
+      text: text + '\n\n' + privacyFooter, attachments: [pdf, ...p.photos],
     });
     // A confirmed primary recipient means the request was accepted.
     // Rejected optional CCs are logged separately to avoid telling the user to resend
@@ -322,6 +324,8 @@ module.exports = async function devis(req, res) {
               'Téléphone : +41 79 967 02 95',
               'E-mail : devis@pfnettoyage.ch',
               'Site : https://www.pfnettoyage.ch',
+              '',
+              privacyFooter,
             ].join('\n'),
             attachments: [pdf],
           });
