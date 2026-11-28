@@ -1,4 +1,6 @@
 'use strict';
+const privacyFooter = 'Protection des données — PF Nettoyage utilise vos données pour traiter votre demande et vous recontacter. Pour en savoir plus et exercer vos droits : https://www.pfnettoyage.ch/confidentialite.html';
+
 const nodemailer=require('nodemailer');
 const {randomUUID}=require('node:crypto');
 const EMAIL=/^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/;
@@ -32,7 +34,7 @@ module.exports=async function prestataires(req,res){
  const ref='PREST-'+randomUUID();
  const txt=['CANDIDATURE PRESTATAIRE / PARTENAIRE PF NETTOYAGE','Référence : '+ref,'Entreprise : '+p.entreprise,'Contact : '+p.contact,'E-mail : '+p.email,'Téléphone : '+p.telephone,'N° IDE (facultatif) : '+(p.ide||'Non indiqué'),'Commune : '+p.commune,'Régions : '+p.regions,'Activités : '+p.prestations,'Documents : '+attachments.length,'','Présentation :',p.description,'','Candidature soumise à examen. Aucun partenariat automatique.'].join('\n');
  const transport=nodemailer.createTransport({host,port,secure:port===465,requireTLS:port===587,auth:{user,pass},connectionTimeout:10000,greetingTimeout:10000,socketTimeout:18000});
- try{const result=await transport.sendMail({from:'PF Nettoyage – Prestataires <'+user+'>',to:'pfnettoyage@gmail.com',replyTo:p.email,subject:'Candidature prestataire – '+p.entreprise+' – '+ref,text:txt,attachments});if(!result.accepted.some(a=>a.toLowerCase()==='pfnettoyage@gmail.com'))throw Error('not_accepted');
+ try{const result=await transport.sendMail({from:'PF Nettoyage – Prestataires <'+user+'>',to:'pfnettoyage@gmail.com',replyTo:p.email,subject:'Candidature prestataire – '+p.entreprise+' – '+ref,text: txt + '\n\n' + privacyFooter,attachments});if(!result.accepted.some(a=>a.toLowerCase()==='pfnettoyage@gmail.com'))throw Error('not_accepted');
     console.log('prestataire_sent',{ref,accepted:true,attachments:attachments.length});
     let confirmationSent=false;
     try{
@@ -58,6 +60,8 @@ module.exports=async function prestataires(req,res){
           'Téléphone / WhatsApp : +41 79 967 02 95',
           'E-mail : pfnettoyage@gmail.com',
           'Site : https://www.pfnettoyage.ch',
+          '',
+          privacyFooter,
           '',
           'Ceci est un accusé de réception automatique.'
         ].join('\n')
