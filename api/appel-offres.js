@@ -1,5 +1,7 @@
 'use strict';
 
+const privacyFooter = 'Protection des données — PF Nettoyage utilise vos données pour traiter votre demande et vous recontacter. Pour en savoir plus et exercer vos droits : https://www.pfnettoyage.ch/confidentialite.html';
+
 const nodemailer = require('nodemailer');
 const { randomUUID } = require('node:crypto');
 const EMAIL = /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/;
@@ -82,7 +84,7 @@ module.exports = async function appelOffres(req, res) {
       from:'PF Nettoyage – Appels d\'offres <'+user+'>',
       to:'pfnettoyage@gmail.com', replyTo:data.email,
       subject:'Appel d\'offres - '+data.entreprise+' - '+ref,
-      text:content, attachments
+      text: content + '\n\n' + privacyFooter, attachments
     });
     if(!result.accepted.some(a=>a.toLowerCase()==='pfnettoyage@gmail.com'))throw Error('not_accepted');
     console.log('appel_offres_sent',{ref,accepted:true,attachments:attachments.length});
