@@ -604,6 +604,8 @@ if(pfPhotoInput)pfPhotoInput.addEventListener('change',()=>{
   if(!sendingAvailable||processing)return;
   if(!form.checkValidity()){form.reportValidity();return}
   const payload=requestData();
+  payload.language=['fr','de','it'].includes(document.documentElement.lang.split('-')[0])?document.documentElement.lang.split('-')[0]:'fr';
+  const msg=(fr,de,it)=>({fr,de,it}[payload.language]||fr);
   if(payload.service==='Déménagement'){
    if(!payload.from||!payload.to||!payload.from.region||!payload.from.commune||!payload.from.address||!payload.to.region||!payload.to.commune||!payload.to.address){
     notice('Veuillez renseigner les adresses de départ et de destination.',true);return;
@@ -615,18 +617,18 @@ if(pfPhotoInput)pfPhotoInput.addEventListener('change',()=>{
 
   processing=true;
   button.disabled=true;
-  notice('Envoi de votre demande en cours…',false);
+  notice(msg('Envoi de votre demande en cours…','Ihre Anfrage wird gesendet…','Invio della richiesta in corso…'),false);
   try {
    payload.photos=await collectQuotePhotos();
    const response=await fetch('/api/devis',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
    const result=await response.json();
-   if(response.status===429){notice('Veuillez patienter une minute avant de réessayer.',true);return;}
-   if(!response.ok||!result.ok)throw new Error('send_failed');
-   const received='Votre demande de devis a bien été envoyée. Nous vous contacterons prochainement.';
+   if(response.status===429){notice(msg('Veuillez patienter une minute avant de réessayer.','Bitte warten Sie eine Minute, bevor Sie es erneut versuchen.','Attendete un minuto prima di riprovare.'),true);return;}
+   if(!response.ok||result.ok!==true||!result.reference)throw new Error('send_failed');
+   const received=msg('Votre demande a bien été reçue.','Ihre Anfrage ist eingegangen.','La vostra richiesta è stata ricevuta.')+' '+result.reference+(payload.email&&!result.confirmationSent?' '+msg('L’e-mail de confirmation n’a pas pu être envoyé.','Die Bestätigungs-E-Mail konnte nicht gesendet werden.','Non è stato possibile inviare l’e-mail di conferma.'):'');
    notice(received,false);
    form.reset();
   } catch(error) {
-   notice('L’envoi automatique est momentanément indisponible. Votre demande n’a pas été envoyée. Vous pouvez la transmettre par WhatsApp sans ressaisir les informations :',true);
+   notice(msg('L’envoi n’a pas été confirmé. Vous pouvez nous contacter par WhatsApp :','Der Versand wurde nicht bestätigt. Sie können uns per WhatsApp kontaktieren:','L’invio non è stato confermato. Potete contattarci tramite WhatsApp:'),true);
    const details=[
     'Bonjour PF Nettoyage, je vous contacte depuis www.pfnettoyage.ch pour une demande de devis.',
     'Nom : '+payload.name,
