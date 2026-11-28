@@ -1,0 +1,22 @@
+name: SMTP simulation
+on:
+  push:
+    branches:
+      - test/smtp-simulation
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  simulation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then npm ci --ignore-scripts --no-audit --no-fund; else npm install --ignore-scripts --no-audit --no-fund; fi
+      - name: Run simulated SMTP test
+        run: node --test tests/smtp-simulation.test.cjs
