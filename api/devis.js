@@ -1,6 +1,6 @@
 'use strict';
 
-const privacyFooter = 'Protection des données — PF Nettoyage utilise vos données pour traiter votre demande et vous recontacter. Pour en savoir plus et exercer vos droits : https://www.pfnettoyage.ch/confidentialite.html';
+const privacyFooter = 'Protection des données — PF Nettoyage utilise vos données pour traiter votre demande et vous recontacter. Informations sur vos droits selon la loi fédérale sur la protection des données (LPD, RS 235.1) : https://www.pfnettoyage.ch/confidentialite.html';
 
 const nodemailer = require('nodemailer');
 const net = require('node:net');
