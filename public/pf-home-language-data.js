@@ -106,3 +106,141 @@ window.PFHomeLanguageRows=[
     "Nessuna data viene prenotata automaticamente."
   ]
 ];
+
+window.PFHomeLanguageRows.push(...[
+  [
+    "Accueil",
+    "Startseite",
+    "Home"
+  ],
+  [
+    "Prestations",
+    "Leistungen",
+    "Servizi"
+  ],
+  [
+    "Nos engagements",
+    "Unsere Verpflichtungen",
+    "I nostri impegni"
+  ],
+  [
+    "Actualités",
+    "Aktuelles",
+    "Novità"
+  ],
+  [
+    "Appel d’offres",
+    "Ausschreibung",
+    "Richiesta d’offerta"
+  ],
+  [
+    "Devis gratuit",
+    "Kostenlose Offerte",
+    "Preventivo gratuito"
+  ],
+  [
+    "Agenda",
+    "Kalender",
+    "Calendario"
+  ],
+  [
+    "Espace clients",
+    "Kundenbereich",
+    "Area clienti"
+  ],
+  [
+    "Demander un devis gratuit",
+    "Kostenlose Offerte anfragen",
+    "Richiedere un preventivo gratuito"
+  ],
+  [
+    "Adresse e-mail (facultatif – pour recevoir la confirmation)",
+    "E-Mail-Adresse (optional – für die Bestätigung)",
+    "Indirizzo e-mail (facoltativo – per ricevere la conferma)"
+  ],
+  [
+    "Profil du demandeur (facultatif)",
+    "Profil der anfragenden Person (optional)",
+    "Profilo del richiedente (facoltativo)"
+  ],
+  [
+    "Nombre de pièces (facultatif)",
+    "Anzahl Zimmer (optional)",
+    "Numero di locali (facoltativo)"
+  ],
+  [
+    "Lieu de l'intervention *",
+    "Einsatzort *",
+    "Luogo dell’intervento *"
+  ],
+  [
+    "Région de l’intervention urgente *",
+    "Region des dringenden Einsatzes *",
+    "Regione dell’intervento urgente *"
+  ],
+  [
+    "Commune de l’intervention urgente *",
+    "Gemeinde des dringenden Einsatzes *",
+    "Comune dell’intervento urgente *"
+  ],
+  [
+    "Autre commune *",
+    "Andere Gemeinde *",
+    "Altro comune *"
+  ],
+  [
+    "Lun",
+    "Mo",
+    "Lun"
+  ],
+  [
+    "Mar",
+    "Di",
+    "Mar"
+  ],
+  [
+    "Mer",
+    "Mi",
+    "Mer"
+  ],
+  [
+    "Jeu",
+    "Do",
+    "Gio"
+  ],
+  [
+    "Ven",
+    "Fr",
+    "Ven"
+  ],
+  [
+    "Sam",
+    "Sa",
+    "Sab"
+  ],
+  [
+    "Dim",
+    "So",
+    "Dom"
+  ],
+  [
+    "Interventions 7j/7 · À tout moment",
+    "Einsätze 7 Tage die Woche · jederzeit",
+    "Interventi 7 giorni su 7 · in qualsiasi momento"
+  ],
+  [
+    "Sur demande, selon disponibilité et après confirmation de notre équipe.",
+    "Auf Anfrage, je nach Verfügbarkeit und nach Bestätigung durch unser Team.",
+    "Su richiesta, secondo disponibilità e dopo conferma del nostro team."
+  ],
+  [
+    "Légende de l'agenda",
+    "Kalenderlegende",
+    "Legenda del calendario"
+  ],
+  [
+    "La date sélectionnée sera ajoutée à votre demande de devis.",
+    "Das ausgewählte Datum wird Ihrer Offertanfrage hinzugefügt.",
+    "La data selezionata sarà aggiunta alla richiesta di preventivo."
+  ]
+]);
