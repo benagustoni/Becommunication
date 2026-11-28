@@ -32,6 +32,7 @@ function cleanPoint(value, needsAddress = false) {
 
 function parseQuote(body) {
   const p = {
+    language: ['fr','de','it'].includes(body.language) ? body.language : 'fr',
     name: cleanString(body.name, 160, true),
     telephone: cleanString(body.telephone, 80, true),
     email: cleanString(body.email, 254),
@@ -305,6 +306,7 @@ module.exports = async function devis(req, res) {
             from: config.from,
             to: p.email,
             replyTo: mailbox(config.from),
+            ...((()=>{const v={"de":{"subject":"Bestätigung Ihrer Offertanfrage – PF Nettoyage","lines":["Guten Tag ","Wir haben Ihre Offertanfrage bei PF Nettoyage – Facility Services erhalten.","Referenz: ","Eine PDF-Zusammenfassung Ihrer Anfrage liegt bei.","Unser Team prüft Ihre Anfrage und meldet sich bei Ihnen.","Ihre Anfrage ist kostenlos und unverbindlich.","Der Einsatztermin muss noch bestätigt werden.","Freundliche Grüsse"]},"it":{"subject":"Conferma della richiesta di preventivo – PF Nettoyage","lines":["Buongiorno ","Abbiamo ricevuto la vostra richiesta di preventivo presso PF Nettoyage – Facility Services.","Riferimento: ","In allegato trovate un riepilogo PDF della richiesta.","Il nostro team esaminerà la richiesta e vi contatterà.","La richiesta è gratuita e senza impegno.","La data dell’intervento deve ancora essere confermata.","Cordiali saluti"]}}[p.language];if(v)return {subject:v.subject,text:[v.lines[0]+p.name+',','',v.lines[1],v.lines[2]+reference,v.lines[3],'',...v.lines.slice(4,7),'',v.lines[7],'PF Nettoyage – Facility Services','+41 79 967 02 95','devis@pfnettoyage.ch','https://www.pfnettoyage.ch'].join('\n')};return {
             subject: 'Confirmation de votre demande de devis – PF Nettoyage',
             text: [
               'Bonjour ' + p.name + ',',
@@ -323,6 +325,7 @@ module.exports = async function devis(req, res) {
               'E-mail : devis@pfnettoyage.ch',
               'Site : https://www.pfnettoyage.ch',
             ].join('\n'),
+            };})()),
             attachments: [pdf],
           });
           assertAccepted(customerReply, p.email);
