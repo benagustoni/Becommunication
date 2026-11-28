@@ -1,5 +1,4 @@
-{rewrites
-"correction-admin:
+{
   "framework": null,
   "buildCommand": "echo Build OK",
   "installCommand": "npm ci",
@@ -47,6 +46,12 @@
           "value": "no-store"
         }
       ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/admin",
+      "destination": "/administration.html"
     }
   ]
 }
